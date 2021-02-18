@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'graphene_django',
+    'materials'
 ]
 
 MIDDLEWARE = [
@@ -78,6 +80,10 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
+}
+
+GRAPHENE = {
+    "SCHEMA": "materials.schema.schema"
 }
 
 
