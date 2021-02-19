@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'graphene_django',
-    'materials'
+    'materials',
+    'user'
 ]
 
 MIDDLEWARE = [
@@ -88,6 +89,9 @@ GRAPHENE = {
     "MIDDLEWARE": [
         'graphql_jwt.middleware.JSONWebTokenMiddleware',
     ],
+}
+GRAPHQL_JWT = {
+    'JWT_ALLOW_ARGUMENT': True,
 }
 
 AUTHENTICATION_BACKENDS = [
