@@ -2,9 +2,10 @@ import graphene
 from graphene_django import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from graphql_jwt.shortcuts import get_token, create_refresh_token
-from rest_framework.authtoken.models import Token
+from graphql_jwt.decorators import login_required
 
 from django.contrib.auth.models import User
+from materials.models import Product, UserProduct
 
 from .models import Profile
 
@@ -14,6 +15,17 @@ class Profile(DjangoObjectType):
         model = Profile
 
 
+class UserProductList(DjangoObjectType):
+    class Meta:
+        model = UserProduct
+        fields = ("user", "product", "added")
+
+class ProductList(DjangoObjectType):
+    class Meta:
+        model = Product
+        fields = ("material", "code", "name")
+
+
 class CreateProfile(graphene.Mutation):
     username = graphene.String()
     password = graphene.String()
@@ -21,14 +33,22 @@ class CreateProfile(graphene.Mutation):
     token = graphene.String()
 
     class Arguments:
-        usernam = graphene.String()
-        passw = graphene.String()
+        username = graphene.String()
+        password = graphene.String()
 
-    def mutate(self, info, usernam, passw):
-        createdUser = User.objects.create_user(usernam, None, passw)
+    def mutate(self, info, username, password):
+        createdUser = User.objects.create_user(username, None, password)
         currentUser = createdUser.save()
         tokence = get_token(createdUser)
-        return CreateProfile(username=usernam, password=passw, success=True, token=tokence)
+        print(createdUser.profile.products.all())
+        return CreateProfile(username=username, password=password, success=True, token=tokence)
+
+
+class Query(graphene.ObjectType):
+    recycled = graphene.List(UserProductList,token=graphene.String(required=True))
+    @login_required
+    def resolve_recycled(self, info, **kwargs):
+        return UserProduct.objects.filter(user=info.context.user.profile)
 
 
 class Mutation(graphene.ObjectType):
