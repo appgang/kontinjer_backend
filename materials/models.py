@@ -21,7 +21,6 @@ class Product(models.Model):
         return self.name
 
 
-
 class UserProduct(models.Model):
     user = models.ForeignKey(
         Profile, on_delete=models.CASCADE)
@@ -31,3 +30,12 @@ class UserProduct(models.Model):
 
     def __str__(self):
         return self.user.user.username + ", " + self.product.name
+
+
+class Trashcan(models.Model):
+    material = models.CharField(max_length=100, default="")
+    latitude = models.CharField(max_length=100,default="")
+    longitude = models.CharField(max_length=100,default="")
+
+    def __str__(self):
+        return self.material + " [" + self.latitude + ", " + self.longitude +"]"

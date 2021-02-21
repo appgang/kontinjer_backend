@@ -45,7 +45,7 @@ class CreateProfile(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
-    recycled = graphene.List(UserProductList,token=graphene.String(required=True))
+    recycled = graphene.List(UserProductList)
     @login_required
     def resolve_recycled(self, info, **kwargs):
         return UserProduct.objects.filter(user=info.context.user.profile)
