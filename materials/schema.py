@@ -36,9 +36,9 @@ class AddRecyclingLocation(graphene.Mutation):
     success = graphene.Boolean()
 
     class Arguments:
-        material = graphene.String()
-        latitude = graphene.String()
-        longitude = graphene.String()
+        material = graphene.String(required=True)
+        latitude = graphene.String(required=True)
+        longitude = graphene.String(required=True)
 
     @login_required
     @superuser_required
@@ -55,8 +55,8 @@ class AddMaterial(graphene.Mutation):
     success = graphene.Boolean()
 
     class Arguments:
-        name = graphene.String()
-        decay = graphene.Int()
+        name = graphene.String(required=True)
+        decay = graphene.Int(required=True)
 
     @login_required
     @superuser_required
@@ -74,12 +74,12 @@ class AddProduct(graphene.Mutation):
     error = graphene.String(required=False)
 
     class Arguments:
-        material_name = graphene.String(required=False)
-        code = graphene.String()
+        material_name = graphene.String()
+        code = graphene.String(required=False)
         name = graphene.String()
 
-    def mutate(self, info, code, name, **kwargs):
-        print(kwargs.get("material_name", None))
+    def mutate(self, info, name, **kwargs):
+        code = kwargs.get("code", 0)
         material_name = kwargs.get("material_name", None)
         if(material_name != None):
             try:
@@ -103,10 +103,25 @@ class AddRecycledItem(graphene.Mutation):
 
     class Arguments:
         product_name = graphene.String()
+        code = graphene.String()
 
     def mutate(self, info, **kwargs):
         product_name = kwargs.get("product_name", None)
-        if(product_name != None):
+        code = kwargs.get("code", None)
+        if(code != None):
+            try:
+                currentProduct = Product.objects.get(code=code)
+            except Product.DoesNotExist:
+                return AddRecycledItem(False)
+            newUserProduct = UserProduct(
+                user=info.context.user.profile, product=currentProduct)
+            newUserProduct.save()
+            info.context.user.profile.recycled += 1
+            info.context.user.profile.years_saved += currentProduct.material.decay
+            info.context.user.profile.save()
+            return AddRecycledItem(True)
+
+        elif(product_name != None):
             try:
                 currentProduct = Product.objects.get(name=product_name)
             except Product.DoesNotExist:
@@ -114,6 +129,8 @@ class AddRecycledItem(graphene.Mutation):
             newUserProduct = UserProduct(
                 user=info.context.user.profile, product=currentProduct)
             newUserProduct.save()
+            info.context.user.profile.recycled += 1
+            info.context.user.profile.years_saved += currentProduct.material.decay
             return AddRecycledItem(True)
         return AddRecycledItem(False)
 
@@ -121,31 +138,64 @@ class AddRecycledItem(graphene.Mutation):
 class Query(graphene.ObjectType):
 
     all_materials = graphene.List(
-        MaterialList)
+        MaterialList, name=graphene.String(required=False))
 
-    material_search = graphene.Field(
-        MaterialList, token=graphene.String(required=True), name=graphene.String(),)
+    recycling_locations = graphene.List(
+        TrashcanList, material=graphene.String(required=False))
 
-    recycling_locations = graphene.List(TrashcanList)
+    item_products = graphene.List(
+        ProductList, code=graphene.String(required=False)
+    )
+    item_products_by_material = graphene.List(
+        ProductList, material=graphene.String(required=True))
 
-    @login_required
     def resolve_all_materials(self, info, **kwargs):
-        user = info.context.user
-        if not user.is_authenticated:
-            raise Exception("You need to login (;")
-        return Material.objects.all()
+        material = kwargs.get("name")
+        if material == None:
+            return Material.objects.all()
+        else:
+            try:
+                materials = Material.objects.filter(name=material)
+            except Material.DoesNotExist:
+                return None
+            return materials
 
-    @login_required
-    def resolve_material_search(self, info, name, **kwargs):
-        print(name)
-        try:
-            material = Material.objects.get(name=name)
-        except Material.DoesNotExist:
-            material = None
-        return material
+    def resolve_item_products(self, info, **kwargs):
+        code = kwargs.get("code")
+        if code == None:
+            return Product.objects.all()
+        else:
+            try:
+                product = Product.objects.filter(code=code)
+            except Product.DoesNotExist:
+                return None
+            return product
+
+    def resolve_item_products_by_material(self, info, **kwargs):
+        material = kwargs.get("material")
+        if material == None:
+            return Product.objects.all()
+        else:
+            try:
+                material = Material.objects.get(name=material)
+            except Material.DoesNotExist:
+                return None
+            try:
+                products = Product.objects.filter(material=material)
+            except Product.DoesNotExist:
+                return None
+            return products
 
     def resolve_recycling_locations(self, info, **kwargs):
-        return Trashcan.objects.all()
+        material = kwargs.get("material")
+        if material == None:
+            return Trashcan.objects.all()
+        else:
+            try:
+                locations = Trashcan.objects.filter(material=material)
+            except Trashcan.DoesNotExist:
+                return None
+            return locations
 
 
 class Mutation(graphene.ObjectType):

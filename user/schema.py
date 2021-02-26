@@ -20,11 +20,6 @@ class UserProductList(DjangoObjectType):
         model = UserProduct
         fields = ("user", "product", "added")
 
-class ProductList(DjangoObjectType):
-    class Meta:
-        model = Product
-        fields = ("material", "code", "name")
-
 
 class CreateProfile(graphene.Mutation):
     username = graphene.String()
@@ -45,9 +40,10 @@ class CreateProfile(graphene.Mutation):
 
 
 class Query(graphene.ObjectType):
-    recycled = graphene.List(UserProductList)
+    recycled_items = graphene.List(UserProductList)
+
     @login_required
-    def resolve_recycled(self, info, **kwargs):
+    def resolve_recycled_items(self, info, **kwargs):
         return UserProduct.objects.filter(user=info.context.user.profile)
 
 

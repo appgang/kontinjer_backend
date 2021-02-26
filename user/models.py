@@ -9,7 +9,8 @@ from django.utils import timezone
 class Profile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    recyled = models.IntegerField()
+    recycled = models.IntegerField(default=0)
+    years_saved = models.IntegerField(default=0)
     products = models.ManyToManyField(
         'materials.Product', through='materials.UserProduct', related_name='products')
 

@@ -5,7 +5,7 @@ from user.models import Profile
 
 
 class Material(models.Model):
-    name = models.CharField(max_length=100, default="")
+    name = models.CharField(max_length=100, default="",)
     decay = models.IntegerField(default=41)
 
     def __str__(self):
@@ -13,29 +13,29 @@ class Material(models.Model):
 
 
 class Product(models.Model):
-    material = models.ForeignKey(Material, on_delete=models.CASCADE)
-    code = models.CharField(max_length=100, default="")
-    name = models.CharField(max_length=100, default="")
+    material = models.ForeignKey(Material, on_delete=models.CASCADE, related_name='material')
+    code=models.CharField(max_length = 100, default = "")
+    name=models.CharField(max_length = 100, default = "")
 
     def __str__(self):
         return self.name
 
 
 class UserProduct(models.Model):
-    user = models.ForeignKey(
-        Profile, on_delete=models.CASCADE)
-    product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name='product')
-    added = models.DateTimeField(auto_now_add=True)
+    user=models.ForeignKey(
+        Profile, on_delete = models.CASCADE)
+    product=models.ForeignKey(
+        Product, on_delete = models.CASCADE, related_name = 'product')
+    added=models.DateTimeField(auto_now_add = True)
 
     def __str__(self):
         return self.user.user.username + ", " + self.product.name
 
 
 class Trashcan(models.Model):
-    material = models.CharField(max_length=100, default="")
-    latitude = models.CharField(max_length=100,default="")
-    longitude = models.CharField(max_length=100,default="")
+    material=models.CharField(max_length = 100, default = "")
+    latitude=models.CharField(max_length = 100, default = "")
+    longitude=models.CharField(max_length = 100, default = "")
 
     def __str__(self):
-        return self.material + " [" + self.latitude + ", " + self.longitude +"]"
+        return self.material + " [" + self.latitude + ", " + self.longitude + "]"

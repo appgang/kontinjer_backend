@@ -11,4 +11,4 @@ print('test')
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         print("test")
-        Profile.objects.create(user=instance, recyled=0)
+        Profile.objects.create(user=instance, recycled=0)
